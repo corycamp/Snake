@@ -9,9 +9,10 @@ public class Main {
         JFrame frame = new JFrame("Snake");
         frame.setSize(600,600);
         frame.setVisible(true);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-        Board board = new Board();
+        CloseFrame close = frame::dispose;
+        Board board = new Board(close);
         board.requestFocusInWindow();
         frame.add(board);
 

@@ -14,14 +14,17 @@ public class Board extends JPanel implements Runnable {
     private String direction;
     private Boolean running;
     private Boolean paused;
+    private Boolean gameOver;
     private Apple apple;
     private SnakeBody snake;
+    private CloseFrame closeFunc;
 
-    public Board(){
+    public Board(CloseFrame close){
         this.setFocusable(true);
         this.setSize(500,500);
         this.setVisible(true);
         this.setBackground(Color.BLACK);
+        this.closeFunc = close;
         setupKeyBindings();
         setupGame();
     }
@@ -30,10 +33,12 @@ public class Board extends JPanel implements Runnable {
         this.x = 50;
         this.y = 50;
         this.score = 0;
+        this.direction = null;
         this.apple = new Apple(SIZE);
         this.snake = new SnakeBody();
         this.running = true;
         this.paused = false;
+        this.gameOver = false;
     }
 
     private void printGame(Graphics g){
@@ -49,13 +54,27 @@ public class Board extends JPanel implements Runnable {
         g.setColor(Color.WHITE);
         g.drawString("PAUSED", 250, 250);
         g.drawString("Press ESC to continue", 250, 300);
+        g.drawString("Press E to exit", 250, 350);
+    }
+
+    private void gameOverMenu(Graphics g){
+        g.setFont(Font.getFont(Font.SANS_SERIF));
+        g.setColor(Color.WHITE);
+        g.drawString("GAME OVER", 250, 250);
+        g.drawString("SCORE: " + this.score, 250, 300);
+        g.drawString("Press R to retry", 250, 350);
+        g.drawString("Press E to exit", 250, 400);
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if(!this.paused){
-            printGame(g);
+            if (this.gameOver) {
+                this.gameOverMenu(g);
+            } else {
+                printGame(g);
+            }
         }else {
             printPauseMenu(g);
         }
@@ -86,7 +105,7 @@ public class Board extends JPanel implements Runnable {
                 }
 
                 if (this.snake.getPosX() > this.getWidth() - SIZE || this.snake.getPosX() < 0 || this.snake.getPosY() < 0 || this.snake.getPosY() > this.getHeight() - (SIZE + 5)) {
-                    this.running = false;
+                    this.gameOver = true;
                 }
                 handleAppleCollision();
                 try {
@@ -139,6 +158,26 @@ public class Board extends JPanel implements Runnable {
                     paused = true;
                 }else{
                     paused = false;
+                }
+            }
+        });
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("E"), "exit");
+        getActionMap().put("exit", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(gameOver || paused){
+                    closeFunc.handleCloseFrame();
+                }
+            }
+        });
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("R"), "retry");
+        getActionMap().put("retry", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(gameOver){
+                    setupGame();
                 }
             }
         });
